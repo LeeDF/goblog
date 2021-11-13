@@ -6,9 +6,9 @@
 
 ## rpc简单示例
 
-因为是client-server模式，所以我们先创建两个文件, client.go  server.go <br>
-我们使用go自带的rpc库，在 net/rpc下 <br>
-server.go 中：
+因为是client-server模式，所以我们先创建两个文件, `client.go  server.go` <br>
+我们使用go自带的rpc库，在 `net/rpc` 下 <br>
+`server.go` 中：
 ```go
 package main
 
@@ -55,9 +55,10 @@ func main() {
 
 ```
 
-server 中我们定义了echoservice这样一个服务，这个服务下有Hello 方法，Hello 方法有一个入参HelloReq，一个出参HelloRsp，其中HelloReq 等同与http api的请求参数， HelloRsp 等同于http api的响应数据
+server 中我们定义了echoservice这样一个服务，这个服务下有Hello 方法，Hello 方法有一个入参HelloReq，一个出参HelloRsp，其中HelloReq 
+等同与http api的请求参数， HelloRsp 等同于http api的响应数据
 
-client.go :
+`client.go` :
 ```go
 package main
 
@@ -92,7 +93,8 @@ func main() {
 
 ```
 
-client中 我们通过拨号访问server中的ip:port ，通过call server中申明的服务名rpc.echoservice 加上方法名Hello 组成的名称rpc.echoservice.Hello，然后传入Hello函数的参数，就像本地有个Hello方法一样
+client中 我们通过拨号访问server中的ip:port ，通过call server中申明的服务名rpc.echoservice 加上方法名Hello 
+组成的名称`rpc.echoservice.Hello`，然后传入Hello函数的参数，就像本地有个Hello方法一样
 
 然后在开启两个终端，其中一个终端先启动server
 ```shell
@@ -103,7 +105,8 @@ go run server.go
 go run client.go
 # 2021/11/13 10:40:37 rpc reply:&{Reply:hello Lee!}
 ```
-我们会发现运行一次之后server就退出了，这显然不符合一个服务可以被重复调用的基础能力，是因为我们在server中，accept 了一个请求处理完后就退出了，只要将server接收的地方不停的接收，然后起goroutine去处理请求，server代码改成：
+我们会发现运行一次之后server就退出了，这显然不符合一个服务可以被重复调用的基础能力，是因为我们在server中，accept 了一个请求处理完后就退出了，
+只要将server接收的地方不停的接收，然后起goroutine去处理请求，server代码改成：
 ```go
 for {
 		conn, err := listen.Accept()
@@ -119,9 +122,9 @@ for {
 
 如果让我们来开发这样的一个功能，我们会怎么实现呢
 不会不要紧，我们直接学习官方代码的实现即可，go的进阶最简单的路径就是看官方代码，看看大佬们是怎么实现的
-我本地go版本是go version go1.16.7 darwin/amd64, 代码在 net/rpc 下，文件非常少，所以实现并不复杂，我们打开server.go
-找到RegisterName方法，因为我们刚才自己实现的例子中，main方法的第一行就是rpc.RegisterName("rpc.echoservice", new(EchoService))，
-RegisterName 方法中什么都没有，真正的实现在 server.register方法中, 看看注册方法具体做了什么
+我本地go版本是`go version go1.16.7 darwin/amd64`, 代码在 `net/rpc` 下，文件非常少，所以实现并不复杂，我们打开`server.go`
+找到`RegisterName`方法，因为我们刚才自己实现的例子中，main方法的第一行就是`rpc.RegisterName("rpc.echoservice", new(EchoService))`，
+`RegisterName` 方法中什么都没有，真正的实现在 `server.registe`r方法中, 看看注册方法具体做了什么
 
 ```go
 type Server struct {
@@ -196,9 +199,9 @@ func (server *Server) register(rcvr interface{}, name string, useName bool) erro
 }
 ```
 
-RegisterName方式实际上就是将服务名rpc.echoservice 存储在map中，map中包含各种方法的反射信息，因为调用的时候需要用到这些反射信息
-server中下面的代码就是listen一个网络端口，指定网络类型，然后accpet等待网络连接，等到一个网络请求的到达时，将网络请求传给rpc.ServeConn(conn)方法
-我们看下ServeConn如何实现的，具体实现在(server *Server) ServeConn 中，ServeConn 这个方法也比较简单，构造了gobServerCodec 对象，然后调用了ServeCodec方法，接下来看看ServeCodec的实现逻辑
+`RegisterName`方式实际上就是将服务名`rpc.echoservice` 存储在map中，map中包含各种方法的反射信息，因为调用的时候需要用到这些反射信息
+server中下面的代码就是listen一个网络端口，指定网络类型，然后accpet等待网络连接，等到一个网络请求的到达时，将网络请求传给`rpc.ServeConn(conn)`方法
+我们看下`ServeConn`如何实现的，具体实现在`(server *Server) ServeConn` 中，ServeConn 这个方法也比较简单，构造了`gobServerCodec` 对象，然后调用了`ServeCodec`方法，接下来看看`ServeCodec`的实现逻辑
 ```go
 
 type gobServerCodec struct {
@@ -284,15 +287,15 @@ func (server *Server) readRequestHeader(codec ServerCodec) (svc *service, mtype 
 }
 ```
 
-到此从接收到网络请求到写回到网络就完成了，除了gobServerCodec的方法没有看，server的主流程就清除了，
+到此从接收到网络请求到写回到网络就完成了，除了`gobServerCodec`的方法没有看，server的主流程就清除了，
 codec提供了序列化、反序列化等功能，如果理解的简单一些，可以理解成json的marshal和unmarshal，
 codec可以拿来单独分析，暂时不分析不影响阅读rpc的主要逻辑
 
-继续看下client.go如何发起调用，通过server的代码，我们大概能猜到客户端的代码是传入service+method方法的字符串，
-然后请求数据通过同样的gobServerCodec发送到网络中，我们带着猜测取看下具体的实现
-通过client.Call("rpc.echoservice.Hello", req, rsp)调用Call方法，
-call := <-client.Go(serviceMethod, args, reply, make(chan *Call, 1)).Done 发送请求，等待响应的返回
-client.Go()方法中调用client.send(call)，发送请求，client.send()方法调用 client.codec.WriteRequest(&client.request, call.Args)发送请求
+继续看下`client.go`如何发起调用，通过server的代码，我们大概能猜到客户端的代码是传入service+method方法的字符串，
+然后请求数据通过同样的`gobServerCodec`发送到网络中，我们带着猜测取看下具体的实现
+通过`client.Call("rpc.echoservice.Hello", req, rsp)`调用Call方法，
+`call := <-client.Go(serviceMethod, args, reply, make(chan *Call, 1)).Done` 发送请求，等待响应的返回
+`client.Go()`方法中调用`client.send(call)`，发送请求，`client.send()`方法调用 `client.codec.WriteRequest(&client.request, call.Args)`发送请求
 发送看起来也比较简答
 ```go
 
@@ -312,3 +315,9 @@ func (c *gobClientCodec) WriteRequest(r *Request, body interface{}) (err error) 
 最后通过一张图表示整个流程
 
 ![rpc](https://github.com/LeeDF/goblog/blob/master/micro-rpc/rpc.png)
+
+
+整体流程还是比较简单的，核心应该在codeC中，入rest api对比的话。相当与不需要自己取封装http请求和解析请求了，codeC会将这些事做掉，如果我们用http 简单实现一个类似rpc的功能其实也很简单
+比如：registerName用map存http对应的handler，请求的时候将请求的服务和方法放在header中，请求参数通过json序列化到body中，
+server收到请求时，解析header中的数据，将body中的数据json反序列化到hander的请求参数中，然后调用handler，返回的数据通过json 序列化到http的响应中
+下一步我们再去分析`gobClientCodec` 和 `gobServerCodec` 的序列化和反序列化是如何做的
