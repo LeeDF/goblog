@@ -311,4 +311,4 @@ func (c *gobClientCodec) WriteRequest(r *Request, body interface{}) (err error) 
 
 最后通过一张图表示整个流程
 
-![rpc](./rpc.png ''rpc'')
+![rpc](https://github.com/LeeDF/goblog/blob/master/micro-rpc/rpc.png)
